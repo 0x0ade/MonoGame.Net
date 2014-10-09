@@ -1,0 +1,9 @@
+This is a temporary repository for a fully standalone GamerServices/Net project.
+
+This repository is based on the code found in FNA:
+
+https://github.com/flibitijibibo/MonoGame/tree/static-linking
+
+Odds are, this is useless to you unless you're working on MonoGame.Net.
+
+-flibit
