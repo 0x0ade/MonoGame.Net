@@ -23,15 +23,12 @@ using System.Net;
 
 namespace Lidgren.Network
 {
-	public partial class NetIncomingMessage
+	public partial class NetBuffer
 	{
 		/// <summary>
-		/// Returns the internal data buffer, don't modify
+		/// Gets the internal data buffer
 		/// </summary>
-		public byte[] PeekDataBuffer()
-		{
-			return m_data;
-		}
+		public byte[] PeekDataBuffer() { return m_data; }
 
 		//
 		// 1 bit
@@ -112,7 +109,7 @@ namespace Lidgren.Network
 		public Int16 PeekInt16()
 		{
 			NetException.Assert(m_bitLength - m_readPosition >= 16, c_readOverflowError);
-			uint retval = NetBitWriter.ReadUInt32(m_data, 16, m_readPosition);
+			uint retval = NetBitWriter.ReadUInt16(m_data, 16, m_readPosition);
 			return (short)retval;
 		}
 
@@ -123,7 +120,7 @@ namespace Lidgren.Network
 		public UInt16 PeekUInt16()
 		{
 			NetException.Assert(m_bitLength - m_readPosition >= 16, c_readOverflowError);
-			uint retval = NetBitWriter.ReadUInt32(m_data, 16, m_readPosition);
+			uint retval = NetBitWriter.ReadUInt16(m_data, 16, m_readPosition);
 			return (ushort)retval;
 		}
 
@@ -274,13 +271,12 @@ namespace Lidgren.Network
 
 			if ((m_readPosition & 7) == 0) // read directly
 			{
-				// endianness is handled inside BitConverter.ToSingle
 				float retval = BitConverter.ToSingle(m_data, m_readPosition >> 3);
 				return retval;
 			}
 
 			byte[] bytes = PeekBytes(4);
-			return BitConverter.ToSingle(bytes, 0); // endianness is handled inside BitConverter.ToSingle
+			return BitConverter.ToSingle(bytes, 0);
 		}
 
 		/// <summary>
@@ -298,7 +294,7 @@ namespace Lidgren.Network
 			}
 
 			byte[] bytes = PeekBytes(8);
-			return BitConverter.ToDouble(bytes, 0); // endianness is handled inside BitConverter.ToSingle
+			return BitConverter.ToDouble(bytes, 0);
 		}
 
 		/// <summary>
@@ -313,3 +309,4 @@ namespace Lidgren.Network
 		}
 	}
 }
+

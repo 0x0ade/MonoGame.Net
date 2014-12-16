@@ -1,73 +1,17 @@
-﻿/* Copyright (c) 2010 Michael Lidgren
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-and associated documentation files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom
-the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or
-substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-*/
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Text;
 using System.Reflection;
+using System.Net;
 
 namespace Lidgren.Network
 {
-	public partial class NetIncomingMessage
+	/// <summary>
+	/// Base class for NetIncomingMessage and NetOutgoingMessage
+	/// </summary>
+	public partial class NetBuffer
 	{
 		private const string c_readOverflowError = "Trying to read past the buffer size - likely caused by mismatching Write/Reads, different size or order.";
-
-		private static readonly Dictionary<Type, MethodInfo> s_readMethods;
-
-		internal int m_readPosition;
-
-		/// <summary>
-		/// Gets or sets the read position in the buffer, in bits (not bytes)
-		/// </summary>
-		public long Position
-		{
-			get { return (long)m_readPosition; }
-			set { m_readPosition = (int)value; }
-		}
-
-		/// <summary>
-		/// Gets the position in the buffer in bytes; note that the bits of the first returned byte may already have been read - check the Position property to make sure.
-		/// </summary>
-		public int PositionInBytes
-		{
-			get { return (int)(m_readPosition / 8); }
-		}
-
-		static NetIncomingMessage()
-		{
-			Type[] integralTypes = typeof(Byte).Assembly.GetTypes();
-
-			s_readMethods = new Dictionary<Type, MethodInfo>();
-			MethodInfo[] methods = typeof(NetIncomingMessage).GetMethods(BindingFlags.Instance | BindingFlags.Public);
-			foreach (MethodInfo mi in methods)
-			{
-				if (mi.GetParameters().Length == 0 && mi.Name.StartsWith("Read", StringComparison.InvariantCulture))
-				{
-					string n = mi.Name.Substring(4);
-					foreach (Type it in integralTypes)
-					{
-						if (it.Name == n)
-							s_readMethods[it] = mi;
-					}
-				}
-			}
-		}
 
 		/// <summary>
 		/// Reads a boolean value (stored as a single bit) written using Write(bool)
@@ -90,7 +34,22 @@ namespace Lidgren.Network
 			m_readPosition += 8;
 			return retval;
 		}
-		
+
+		/// <summary>
+		/// Reads a byte and returns true or false for success
+		/// </summary>
+		public bool ReadByte(out byte result)
+		{
+			if (m_bitLength - m_readPosition < 8)
+			{
+				result = 0;
+				return false;
+			}
+			result = NetBitWriter.ReadByte(m_data, 8, m_readPosition);
+			m_readPosition += 8;
+			return true;
+		}
+
 		/// <summary>
 		/// Reads a signed byte
 		/// </summary>
@@ -125,6 +84,23 @@ namespace Lidgren.Network
 			NetBitWriter.ReadBytes(m_data, numberOfBytes, m_readPosition, retval, 0);
 			m_readPosition += (8 * numberOfBytes);
 			return retval;
+		}
+
+		/// <summary>
+		/// Reads the specified number of bytes and returns true for success
+		/// </summary>
+		public bool ReadBytes(int numberOfBytes, out byte[] result)
+		{
+			if (m_bitLength - m_readPosition + 7 < (numberOfBytes * 8))
+			{
+				result = null;
+				return false;
+			}
+
+			result = new byte[numberOfBytes];
+			NetBitWriter.ReadBytes(m_data, numberOfBytes, m_readPosition, result, 0);
+			m_readPosition += (8 * numberOfBytes);
+			return true;
 		}
 
 		/// <summary>
@@ -172,7 +148,7 @@ namespace Lidgren.Network
 		public Int16 ReadInt16()
 		{
 			NetException.Assert(m_bitLength - m_readPosition >= 16, c_readOverflowError);
-			uint retval = NetBitWriter.ReadUInt32(m_data, 16, m_readPosition);
+			uint retval = NetBitWriter.ReadUInt16(m_data, 16, m_readPosition);
 			m_readPosition += 16;
 			return (short)retval;
 		}
@@ -184,7 +160,7 @@ namespace Lidgren.Network
 		public UInt16 ReadUInt16()
 		{
 			NetException.Assert(m_bitLength - m_readPosition >= 16, c_readOverflowError);
-			uint retval = NetBitWriter.ReadUInt32(m_data, 16, m_readPosition);
+			uint retval = NetBitWriter.ReadUInt16(m_data, 16, m_readPosition);
 			m_readPosition += 16;
 			return (ushort)retval;
 		}
@@ -198,6 +174,23 @@ namespace Lidgren.Network
 			uint retval = NetBitWriter.ReadUInt32(m_data, 32, m_readPosition);
 			m_readPosition += 32;
 			return (Int32)retval;
+		}
+
+		/// <summary>
+		/// Reads a 32 bit signed integer written using Write(Int32)
+		/// </summary>
+		[CLSCompliant(false)]
+		public bool ReadInt32(out Int32 result)
+		{
+			if (m_bitLength - m_readPosition < 32)
+			{
+				result = 0;
+				return false;
+			}
+
+			result = (Int32)NetBitWriter.ReadUInt32(m_data, 32, m_readPosition);
+			m_readPosition += 32;
+			return true;
 		}
 
 		/// <summary>
@@ -237,6 +230,22 @@ namespace Lidgren.Network
 			uint retval = NetBitWriter.ReadUInt32(m_data, 32, m_readPosition);
 			m_readPosition += 32;
 			return retval;
+		}
+
+		/// <summary>
+		/// Reads an 32 bit unsigned integer written using Write(UInt32) and returns true for success
+		/// </summary>
+		[CLSCompliant(false)]
+		public bool ReadUInt32(out UInt32 result)
+		{
+			if (m_bitLength - m_readPosition < 32)
+			{
+				result = 0;
+				return false;
+			}
+			result = NetBitWriter.ReadUInt32(m_data, 32, m_readPosition);
+			m_readPosition += 32;
+			return true;
 		}
 
 		/// <summary>
@@ -334,14 +343,36 @@ namespace Lidgren.Network
 
 			if ((m_readPosition & 7) == 0) // read directly
 			{
-				// endianness is handled inside BitConverter.ToSingle
 				float retval = BitConverter.ToSingle(m_data, m_readPosition >> 3);
 				m_readPosition += 32;
 				return retval;
 			}
 
 			byte[] bytes = ReadBytes(4);
-			return BitConverter.ToSingle(bytes, 0); // endianness is handled inside BitConverter.ToSingle
+			return BitConverter.ToSingle(bytes, 0);
+		}
+
+		/// <summary>
+		/// Reads a 32 bit floating point value written using Write(Single)
+		/// </summary>
+		public bool ReadSingle(out float result)
+		{
+			if (m_bitLength - m_readPosition < 32)
+			{
+				result = 0.0f;
+				return false;
+			}
+
+			if ((m_readPosition & 7) == 0) // read directly
+			{
+				result = BitConverter.ToSingle(m_data, m_readPosition >> 3);
+				m_readPosition += 32;
+				return true;
+			}
+
+			byte[] bytes = ReadBytes(4);
+			result = BitConverter.ToSingle(bytes, 0);
+			return true;
 		}
 
 		/// <summary>
@@ -360,7 +391,7 @@ namespace Lidgren.Network
 			}
 
 			byte[] bytes = ReadBytes(8);
-			return BitConverter.ToDouble(bytes, 0); // endianness is handled inside BitConverter.ToSingle
+			return BitConverter.ToDouble(bytes, 0);
 		}
 
 		//
@@ -375,7 +406,7 @@ namespace Lidgren.Network
 		{
 			int num1 = 0;
 			int num2 = 0;
-			while (true)
+			while (m_bitLength - m_readPosition >= 8)
 			{
 				byte num3 = this.ReadByte();
 				num1 |= (num3 & 0x7f) << num2;
@@ -383,6 +414,37 @@ namespace Lidgren.Network
 				if ((num3 & 0x80) == 0)
 					return (uint)num1;
 			}
+
+			// ouch; failed to find enough bytes; malformed variable length number?
+			return (uint)num1;
+		}
+
+		/// <summary>
+		/// Reads a variable sized UInt32 written using WriteVariableUInt32() and returns true for success
+		/// </summary>
+		[CLSCompliant(false)]
+		public bool ReadVariableUInt32(out uint result)
+		{
+			int num1 = 0;
+			int num2 = 0;
+			while (m_bitLength - m_readPosition >= 8)
+			{
+				byte num3;
+				if (ReadByte(out num3) == false)
+				{
+					result = 0;
+					return false;
+				}
+				num1 |= (num3 & 0x7f) << num2;
+				num2 += 7;
+				if ((num3 & 0x80) == 0)
+				{
+					result = (uint)num1;
+					return true;
+				}
+			}
+			result = (uint)num1;
+			return false;
 		}
 
 		/// <summary>
@@ -411,7 +473,7 @@ namespace Lidgren.Network
 		{
 			UInt64 num1 = 0;
 			int num2 = 0;
-			while (true)
+			while (m_bitLength - m_readPosition >= 8)
 			{
 				//if (num2 == 0x23)
 				//	throw new FormatException("Bad 7-bit encoded integer");
@@ -422,6 +484,9 @@ namespace Lidgren.Network
 				if ((num3 & 0x80) == 0)
 					return num1;
 			}
+
+			// ouch; failed to find enough bytes; malformed variable length number?
+			return num1;
 		}
 
 		/// <summary>
@@ -486,10 +551,20 @@ namespace Lidgren.Network
 		{
 			int byteLen = (int)ReadVariableUInt32();
 
-			if (byteLen == 0)
+			if (byteLen <= 0)
 				return String.Empty;
 
-			NetException.Assert(m_bitLength - m_readPosition >= (byteLen * 8), c_readOverflowError);
+			if ((ulong)(m_bitLength - m_readPosition) < ((ulong)byteLen * 8))
+			{
+				// not enough data
+#if DEBUG
+				
+				throw new NetException(c_readOverflowError);
+#else
+				m_readPosition = m_bitLength;
+				return null; // unfortunate; but we need to protect against DDOS
+#endif
+			}
 
 			if ((m_readPosition & 7) == 0)
 			{
@@ -504,9 +579,66 @@ namespace Lidgren.Network
 		}
 
 		/// <summary>
+		/// Reads a string written using Write(string) and returns true for success
+		/// </summary>
+		public bool ReadString(out string result)
+		{
+			uint byteLen;
+			if (ReadVariableUInt32(out byteLen) == false)
+			{
+				result = String.Empty;
+				return false;
+			}
+
+			if (byteLen <= 0)
+			{
+				result = String.Empty;
+				return true;
+			}
+
+			if (m_bitLength - m_readPosition < (byteLen * 8))
+			{
+				result = String.Empty;
+				return false;
+			}
+
+			if ((m_readPosition & 7) == 0)
+			{
+				// read directly
+				result = System.Text.Encoding.UTF8.GetString(m_data, m_readPosition >> 3, (int)byteLen);
+				m_readPosition += (8 * (int)byteLen);
+				return true;
+			}
+
+			byte[] bytes;
+			if (ReadBytes((int)byteLen, out bytes) == false)
+			{
+				result = String.Empty;
+				return false;
+			}
+
+			result = System.Text.Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+			return true;
+		}
+
+		/// <summary>
+		/// Reads a value, in local time comparable to NetTime.Now, written using WriteTime() for the connection supplied
+		/// </summary>
+		public double ReadTime(NetConnection connection, bool highPrecision)
+		{
+			double remoteTime = (highPrecision ? ReadDouble() : (double)ReadSingle());
+
+			if (connection == null)
+				throw new NetException("Cannot call ReadTime() on message without a connected sender (ie. unconnected messages)");
+
+			// lets bypass NetConnection.GetLocalTime for speed
+			return remoteTime - connection.m_remoteTimeOffset;
+		}
+
+		/// <summary>
 		/// Reads a stored IPv4 endpoint description
 		/// </summary>
-		public IPEndPoint ReadIPEndpoint()
+		public IPEndPoint ReadIPEndPoint()
 		{
 			byte len = ReadByte();
 			byte[] addressBytes = ReadBytes(len);
@@ -514,21 +646,6 @@ namespace Lidgren.Network
 
 			IPAddress address = new IPAddress(addressBytes);
 			return new IPEndPoint(address, port);
-		}
-
-		/// <summary>
-		/// Reads a value, in local time comparable to NetTime.Now, written using WriteTime()
-		/// Must have a connected sender
-		/// </summary>
-		public double ReadTime(bool highPrecision)
-		{
-			double remoteTime = (highPrecision ? ReadDouble() : (double)ReadSingle());
-
-			if (m_senderConnection == null)
-				throw new NetException("Cannot call ReadTime() on message without a connected sender (ie. unconnected messages)");
-
-			// lets bypass NetConnection.GetLocalTime for speed
-			return remoteTime - m_senderConnection.m_remoteTimeOffset;
 		}
 
 		/// <summary>
