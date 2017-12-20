@@ -101,7 +101,7 @@ namespace Microsoft.Xna.Framework.GamerServices
 
 		public new GamerCollectionEnumerator GetEnumerator()
 		{
-			return new GamerCollectionEnumerator(this);
+			return new GamerCollectionEnumerator(base.GetEnumerator());
 		}
 
 		public class GamerCollectionEnumerator : IEnumerator<T>, IEnumerator
@@ -125,9 +125,9 @@ namespace Microsoft.Xna.Framework.GamerServices
 				}
 			}
 
-			internal GamerCollectionEnumerator(GamerCollection<T> collection)
+			internal GamerCollectionEnumerator(IEnumerator<T> inner)
 			{
-				Inner = collection.GetEnumerator();
+				Inner = inner;
 			}
 
 			public void Dispose()
