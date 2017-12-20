@@ -72,7 +72,7 @@ namespace Microsoft.Xna.Framework.GamerServices
                 sig.DisplayName = "MonoGamer";
                 sig.Gamertag = "MonoGamer";
 
-                Gamer.SignedInGamers.Add(sig);
+                Gamer.SignedInGamers.Items.Add(sig);
 
                 this.Enabled = false;
                 Guide.IsVisible = false;

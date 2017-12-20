@@ -39,11 +39,20 @@ purpose and non-infringement.
 #endregion License
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Microsoft.Xna.Framework.GamerServices
 {
-	public class SignedInGamerCollection : List<SignedInGamer>
+	public class SignedInGamerCollection : ReadOnlyCollection<SignedInGamer>
 	{
+        public SignedInGamerCollection()
+            : this(new List<SignedInGamer>())
+        {
+		}
+		internal SignedInGamerCollection(IList<SignedInGamer> list)
+            : base(list)
+        {
+		}
 		#region Properties
 		// Indexer to get and set words of the containing document:
 		public SignedInGamer this [PlayerIndex index] { 
@@ -51,9 +60,14 @@ namespace Microsoft.Xna.Framework.GamerServices
 				if (this.Count == 0 || (int)index > this.Count - 1)
 					return null;
 
-				return this [(int)index];
+				return Items [(int)index];
 			}
 		}
+        internal new IList<SignedInGamer> Items {
+            get {
+                return base.Items;
+            }
+        }
 		#endregion
 	}
 
