@@ -93,5 +93,58 @@ namespace Microsoft.Xna.Framework.GamerServices
         {
             return this.GetEnumerator();
         }
+
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			return this.GetEnumerator();
+		}
+
+		public new GamerCollectionEnumerator GetEnumerator()
+		{
+			return new GamerCollectionEnumerator(this);
+		}
+
+		public class GamerCollectionEnumerator : IEnumerator<T>, IEnumerator
+		{
+
+			private IEnumerator<T> Inner;
+
+			public T Current
+			{
+				get
+				{
+					return Inner.Current;
+				}
+			}
+
+			object IEnumerator.Current
+			{
+				get
+				{
+					return Inner.Current;
+				}
+			}
+
+			internal GamerCollectionEnumerator(GamerCollection<T> collection)
+			{
+				Inner = collection.GetEnumerator();
+			}
+
+			public void Dispose()
+			{
+				Inner.Dispose();
+			}
+
+			public bool MoveNext()
+			{
+				return Inner.MoveNext();
+			}
+
+			public void Reset()
+			{
+				Inner.Reset();
+			}
+		}
+
 	}
 }
