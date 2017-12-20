@@ -43,13 +43,13 @@ using System.Collections.ObjectModel;
 
 namespace Microsoft.Xna.Framework.GamerServices
 {
-	public class SignedInGamerCollection : ReadOnlyCollection<SignedInGamer>
+	public class SignedInGamerCollection : GamerCollection<SignedInGamer>
 	{
         public SignedInGamerCollection()
             : this(new List<SignedInGamer>())
         {
 		}
-		internal SignedInGamerCollection(IList<SignedInGamer> list)
+		internal SignedInGamerCollection(List<SignedInGamer> list)
             : base(list)
         {
 		}
