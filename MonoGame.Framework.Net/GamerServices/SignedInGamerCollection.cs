@@ -63,11 +63,6 @@ namespace Microsoft.Xna.Framework.GamerServices
 				return Items [(int)index];
 			}
 		}
-        internal new IList<SignedInGamer> Items {
-            get {
-                return base.Items;
-            }
-        }
 		#endregion
 	}
 

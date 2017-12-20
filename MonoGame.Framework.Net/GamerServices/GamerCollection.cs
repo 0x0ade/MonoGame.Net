@@ -104,7 +104,7 @@ namespace Microsoft.Xna.Framework.GamerServices
 			return new GamerCollectionEnumerator(base.GetEnumerator());
 		}
 
-		public class GamerCollectionEnumerator : IEnumerator<T>, IEnumerator
+		public struct GamerCollectionEnumerator : IEnumerator<T>, IEnumerator
 		{
 
 			private IEnumerator<T> Inner;
