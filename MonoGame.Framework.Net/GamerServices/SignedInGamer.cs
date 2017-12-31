@@ -70,7 +70,8 @@ namespace Microsoft.Xna.Framework.GamerServices
 		
 		private void DoAuthentication()
 		{
-				
+            SignedInGamers.AddGamer(this);
+            SignedIn(this, new SignedInEventArgs(this));
 		}
 		
 		public SignedInGamer()
@@ -231,7 +232,7 @@ namespace Microsoft.Xna.Framework.GamerServices
 		{ 
 			get
 			{
-				throw new NotSupportedException();
+                return new GameDefaults();
 			}
 		}
 		
@@ -239,7 +240,7 @@ namespace Microsoft.Xna.Framework.GamerServices
 		{ 
 			get
 			{
-				throw new NotSupportedException();
+                return false;
 			}
 		}
 		
@@ -250,18 +251,10 @@ namespace Microsoft.Xna.Framework.GamerServices
 				return false;
 			}
 		}
-		
-		public int PartySize 
-		{ 
-			get
-			{
-				throw new NotSupportedException();
-			}
-			set
-			{
-				throw new NotSupportedException();
-			}
-		}
+
+        public int PartySize {
+            get; set;
+        } = 0;
 		
         public PlayerIndex PlayerIndex
         {
@@ -275,7 +268,7 @@ namespace Microsoft.Xna.Framework.GamerServices
 		{ 
 			get
 			{
-				throw new NotSupportedException();
+                return new GamerPresence();
 			}
 		}
 
@@ -323,7 +316,7 @@ namespace Microsoft.Xna.Framework.GamerServices
 			Gamer = gamer;
 		}
 
-		public Gamer Gamer
+		public SignedInGamer Gamer
 		{
 			get;
 			private set;
@@ -337,7 +330,7 @@ namespace Microsoft.Xna.Framework.GamerServices
 			Gamer = gamer;
 		}
 
-		public Gamer Gamer
+		public SignedInGamer Gamer
 		{
 			get;
 			private set;

@@ -48,7 +48,7 @@ namespace Microsoft.Xna.Framework.GamerServices
 		{ 
 			get
 			{
-				throw new NotSupportedException();
+                return false;
 			}
 		}
 	}
