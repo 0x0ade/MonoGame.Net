@@ -89,13 +89,9 @@ namespace Microsoft.Xna.Framework.GamerServices
 		#region Methods
 		public FriendCollection GetFriends()
 		{
-			if(IsSignedInToLive)
+			if ( friendCollection == null )
 			{
-				if ( friendCollection == null )
-				{
-					friendCollection = new FriendCollection();
-				}
-								
+				friendCollection = new FriendCollection();
 			}
 			
 			return friendCollection;
@@ -151,14 +147,11 @@ namespace Microsoft.Xna.Framework.GamerServices
 		
 		public AchievementCollection GetAchievements()
 		{
-			if ( IsSignedInToLive )
+			if (gamerAchievements == null)
 			{
-				if (gamerAchievements == null)
-				{
-					gamerAchievements = new AchievementCollection();
-				}
-								
+				gamerAchievements = new AchievementCollection();
 			}
+
 			return gamerAchievements;
 		}
 		
