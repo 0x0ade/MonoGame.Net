@@ -69,7 +69,7 @@ namespace Microsoft.Xna.Framework.GamerServices
 		{ 
 			get
 			{
-				return true;
+				return false;
 			}
 		}
 		
